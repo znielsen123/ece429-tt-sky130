@@ -14,6 +14,15 @@ module pm32 (
     output reg  [63:0]  p,
     output wire         done
 );
+
+
+initial begin
+   $dumpfile("pm32.fst");
+   $dumpvars(0, pm32);
+end
+
+
+
     wire        pw;
     reg [31:0]  Y;
     reg [7:0]   cnt, ncnt;
