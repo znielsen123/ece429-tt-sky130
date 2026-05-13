@@ -15,12 +15,12 @@ module pm32 (
     output wire         done
 );
 
-
+`ifdef COCOTB_SIM
 initial begin
    $dumpfile("pm32.fst");
    $dumpvars(0, pm32);
 end
-
+`endif
 
 
     wire        pw;

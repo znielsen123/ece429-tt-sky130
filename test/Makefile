@@ -1,46 +1,51 @@
 # Makefile
-# See https://docs.cocotb.org/en/stable/quickstart.html for more info
+# Cocotb simulation Makefile
 
-# defaults
 SIM ?= icarus
-FST ?= -fst # Use more efficient FST format
+FST ?= -fst
 TOPLEVEL_LANG ?= verilog
+
 SRC_DIR = $(PWD)/../src
-PROJECT_SOURCES = pm32.v spm.v
 
 ifneq ($(GATES),yes)
 
-# RTL simulation:
+# ------------------------------------------------------------
+# Local RTL test for raw multiplier pm32
+# ------------------------------------------------------------
 SIM_BUILD = sim_build/rtl
+
+PROJECT_SOURCES = pm32.v spm.v
 VERILOG_SOURCES += $(addprefix $(SRC_DIR)/,$(PROJECT_SOURCES))
+
+COMPILE_ARGS += -I$(SRC_DIR)
+COMPILE_ARGS += -DCOCOTB_SIM
+
+TOPLEVEL = pm32
+COCOTB_TEST_MODULES = test_pm32
 
 else
 
-# Gate level simulation:
+# ------------------------------------------------------------
+# GitHub / TinyTapeout gate-level test
+# ------------------------------------------------------------
 SIM_BUILD = sim_build/gl
-COMPILE_ARGS    += -DGL_TEST
-COMPILE_ARGS    += -DFUNCTIONAL
-COMPILE_ARGS    += -DUSE_POWER_PINS
-COMPILE_ARGS    += -DSIM
-COMPILE_ARGS    += -DUNIT_DELAY=\#1
-COMPILE_ARGS	+= -DCOCOTB_SIM
+
+COMPILE_ARGS += -DGL_TEST
+COMPILE_ARGS += -DFUNCTIONAL
+COMPILE_ARGS += -DUSE_POWER_PINS
+COMPILE_ARGS += -DSIM
+COMPILE_ARGS += -DUNIT_DELAY=\#1
+
 VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/primitives.v
 VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/sky130_fd_sc_hd.v
 
-# this gets copied in by the GDS action workflow
+# This file is generated/copied by the GDS action
 VERILOG_SOURCES += $(PWD)/gate_level_netlist.v
+
+# Gate-level netlist top module is the TinyTapeout wrapper
+TOPLEVEL = tt_um_znielsen123
+COCOTB_TEST_MODULES = test
 
 endif
 
-# Allow sharing configuration between design and testbench via `include`:
-COMPILE_ARGS 		+= -I$(SRC_DIR)
-
-# Include the testbench sources:
-#VERILOG_SOURCES += $(PWD)/tb.v
-TOPLEVEL = pm32
-
-# List test modules to run, separated by commas and without the .py suffix:
-COCOTB_TEST_MODULES = test_pm32
-
-# include cocotb's make rules to take care of the simulator setup
 include $(shell cocotb-config --makefiles)/Makefile.sim
